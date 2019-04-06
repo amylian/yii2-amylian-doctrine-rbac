@@ -1,5 +1,5 @@
 {
-  "name": "amylian/yii2-amylian-docrine-rbac",
+  "name": "amylian/yii2-amylian-doctrine-rbac",
   "description": "ATTENTION: EXPERIMENTAL! Yii2 RBAC implementation with Doctrine",
   "type": "yii2-extension",
   "license": "BSD-3-Clause",
