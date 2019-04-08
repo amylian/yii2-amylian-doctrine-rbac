@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<phpunit bootstrap="./tests/bootstrap.php"
+         backupGlobals="true"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         stopOnFailure="false">
+    
+    <php>
+        <var name="db_type" value="pdo_mysql"/>
+        <var name="db_host" value="localhost" />
+        <var name="db_username" value="abexto_amylian_tests" />
+        <var name="db_password" value="abexto_amylian_tests" />
+        <var name="db_name" value="abexto_amylian_tests" />
+        <var name="db_port" value="3306"/>
+    </php>
+    
+    
+    <testsuites>
+        <testsuite name="Amylian/Yii/Rbac Test Suite">
+            <directory>./tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -31,12 +31,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Amylian\\Yii\\DI\\": "src/"
+      "Amylian\\Yii\\Doctrine\\Rbac\\": "src/"
     }    
   },
   "autoload-dev": {
     "psr-4": {
-      "Amylian\\Yii\\DI\\Test\\": "tests/",
+      "Amylian\\Tests\\Yii\\Doctrine\\Rbac\\": "tests/",
       "yiiunit\\": "vendor/yiisoft/yii2-dev/tests"
     }    
   }
