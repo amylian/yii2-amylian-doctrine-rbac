@@ -39,4 +39,4 @@ before_script:
   - cp tests/_travis/phpunit.xml phpunit.xml
 
 script:
-  - phpunit $PHPUNIT_FLAGS
+  - vendor/bin/phpunit $PHPUNIT_FLAGS
