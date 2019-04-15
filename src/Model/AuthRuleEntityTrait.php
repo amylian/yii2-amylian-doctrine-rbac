@@ -49,7 +49,7 @@ trait AuthRuleEntityTrait
     
     /**
      * @var AuthItemEntityInterface[]|ArrayCollection
-     * @OneToMany (targetEntity="AuthItemEntityInterface", mappedBy="rule", fetch="EXTRA_LAZY")
+     * @OneToMany (targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthItemEntityInterface", mappedBy="rule", fetch="EXTRA_LAZY")
      */
     protected $usedByAuthItems = null;
 

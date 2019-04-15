@@ -748,7 +748,6 @@ class Manager extends BaseManager
     protected function updateItem($name, $item): bool
     {
         $authItemEntity = $this->findAuthItemEntity($name);
-        $this->em->getConfiguration()->setSQLLogger(new EchoSQLLogger());
         $this->beginTransaction(true);
         try {
             if ($authItemEntity->getName() !== $item->name) {

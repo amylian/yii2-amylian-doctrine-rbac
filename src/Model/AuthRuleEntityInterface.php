@@ -1,10 +1,5 @@
 <?php
 
-use Amylian\Yii\Doctrine\Rbac\Model\AuthItemEntityInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-use yii\rbac\Rule;
-use DateTime
-
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -12,6 +7,10 @@ use DateTime
  */
 
 namespace Amylian\Yii\Doctrine\Rbac\Model;
+
+use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
+use yii\rbac\Rule;
 
 /**
  * @author Andreas Prucha, Abexto - Helicon Software Development <andreas.prucha@gmail.com>

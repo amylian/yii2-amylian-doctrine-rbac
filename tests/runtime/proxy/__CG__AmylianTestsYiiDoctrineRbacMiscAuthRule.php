@@ -915,7 +915,7 @@ class AuthRule extends \Amylian\Tests\Yii\Doctrine\Rbac\Misc\AuthRule implements
     /**
      * {@inheritDoc}
      */
-    public function setCreatedAt(?\DateTime $value)
+    public function setCreatedAt($value)
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setCreatedAt', [$value]);
