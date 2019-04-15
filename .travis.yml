@@ -22,7 +22,7 @@ before_install:
     - echo yes | pecl upgrade apcu
     - phpenv config-add ./tests/_travis/php.ini
     - mysql -e 'CREATE DATABASE abexto_amylian_tests';
-    - mysql -e 'GRANT ALL PRIVILEGES ON abexto_amylian_tests.* to travis@\'%\'';
+    - mysql -e "GRANT ALL PRIVILEGES ON abexto_amylian_tests.* to 'travis'@'%'";
 
 # cache vendor dirs
 cache:
