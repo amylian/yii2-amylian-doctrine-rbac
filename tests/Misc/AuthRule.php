@@ -14,8 +14,9 @@ namespace Amylian\Tests\Yii\Doctrine\Rbac\Misc;
  * @author Andreas Prucha, Abexto - Helicon Software Development <andreas.prucha@gmail.com>
  *  
  * @Entity
+ * @HasLifecycleCallbacks;
  */
-class AuthRule extends \Amylian\Yii\Doctrine\Rbac\Model\AbstractAuthRule
+class AuthRule extends \yii\base\Model implements \Amylian\Yii\Doctrine\Rbac\Model\AuthRuleEntityInterface
 {
-    //put your code here
+    use \Amylian\Yii\Doctrine\Rbac\Model\AuthRuleEntityTrait;
 }

@@ -26,6 +26,20 @@ interface AuthItemEntityInterface
     public function getItem(): \yii\rbac\Item;
     
     /**
+     * Assigns the item to to the entity
+     * 
+     * *Attention*: if <code>$rule->ruleName</code> is set, the matching {@see AuthRuleEntityInterface} object
+     * *must* be be passed, otherwise an exception will be thrown
+     * 
+     * 
+     * @param \yii\rbac\Item $item Item to assign
+     * @param AuthRuleEntityInterface Used Rule. Must match <code>$item->ruleName</code>. 
+     * @throws \yii\base\InvalidArgumentException if <code>$item->ruleName</code> is set, but no 
+     * <code>$authRuleEntity</code> is passed or if <code>$item->ruleName</code> and <code>$authRuleEntity</code>
+     */
+    public function setItem(\yii\rbac\Item $item, ?AuthRuleEntityInterface $authRuleEntity = null);
+    
+    /**
      * Returns the Auth item name
      */
     public function getName();
@@ -62,12 +76,12 @@ interface AuthItemEntityInterface
     /**
      * Sets the assigned rule entity
      */
-    public function setRule(?AuthRuleInterface $value);
+    public function setRule(?AuthRuleEntityInterface $value);
 
     /**
      * Returns the assigned rule entity
      */
-    public function getRule(): ?AuthRuleInterface;
+    public function getRule(): ?AuthRuleEntityInterface;
 
     /**
      * Returns the rule name
@@ -106,13 +120,13 @@ interface AuthItemEntityInterface
 
     /**
      * Returns the child auth items
-     * @return AuthItemEntityInterface|array
+     * @return AuthItemEntityInterface|array Array of direct child items indexed by name
      */
     public function getChildAuthItems();
 
     /**
      * Returns the parents of this auth item
-     * @return AuthItemEntityInterface|array
+     * @return AuthItemEntityInterface|array  Array of direct parent items indexed by name
      */
     public function getParentAuthItems();
 
@@ -122,7 +136,7 @@ interface AuthItemEntityInterface
      * **NOTE**: You SHOULD NOT modify this colleciton directly. 
      * Use {@see addChildAuthItem()} or {@see removeChildAuthItem()} instead
      * 
-     * @return AuthItemRelationInterface|array
+     * @return AuthRelationEntityInterface|array
      */
     public function getChildAuthItemRelations();
 
@@ -132,7 +146,7 @@ interface AuthItemEntityInterface
      * **NOTE**: You SHOULD NOT modify this colleciton directly. 
      * Use {@see addParentAuthItem()} or {@see removeParentAuthItem()} instead.
      * 
-     * @return AuthItemRelationInterface|array
+     * @return AuthRelationEntityInterface|array
      */
     public function getParentAuthItemRelations();
 
@@ -145,7 +159,7 @@ interface AuthItemEntityInterface
      * NOTE: Usually it's not necessary to use this method directly - use {@see addChildAuthItem()}
      * instead as it takes care of reverse assignments
      */
-    public function addChildAuthItemRelation(AuthItemRelationInterface $relation);
+    public function addChildAuthItemRelation(AuthRelationEntityInterface $relation);
 
     /**
      * Adds the relation entity to {@see $parentAuthItems}
@@ -156,8 +170,15 @@ interface AuthItemEntityInterface
      * NOTE: Usually it's not necessary to use this method directly - use {@see addParentAuthItem()}
      * instead as it takes care of reverse assignments
      */
-    public function addParentAuthItemRelation(AuthItemRelationInterface $relation);
+    public function addParentAuthItemRelation(AuthRelationEntityInterface $relation);
 
+    /**
+     * Returns all Assignments
+     * 
+     * @return AuthAssignmentEntityInterface[]|\Doctrine\Common\Collections\ArrayCollection
+     */
+    public function getAuthAssignments();
+    
     /**
      * Adds a Child AuthItem Entity
      * 
@@ -165,6 +186,7 @@ interface AuthItemEntityInterface
      * and adds it to {@see childAuthItemRelations} 
      * 
      * @param \Amylian\Yii\Doctrine\Rbac\Model\AuthItemEntityInterface $child
+     * @return AuthRelationEntityInterface
      */
     public function addChildAuthItem(AuthItemEntityInterface $child);
 
@@ -185,6 +207,7 @@ interface AuthItemEntityInterface
      * and adds it to {@see parentAuthItemRelations} 
      * 
      * @param AuthItemEntityInterface $child
+     * @return AuthRelationEntityInterface
      */
     public function addParentAuthItem(AuthItemEntityInterface $child);
 
@@ -203,16 +226,16 @@ interface AuthItemEntityInterface
      * 
      * Removes the item if it exists and sets parent in it to null
      * 
-     * @param AuthItemRelationInterface $relation
+     * @param AuthRelationEntityInterface $relation
      */
-    public function removeChildAuthItemRelation(AuthItemRelationInterface $relation);
+    public function removeChildAuthItemRelation(AuthRelationEntityInterface $relation);
 
     /**
      * Removes the relation entity from the parent list
      * 
      * Removes the item if it exists and sets child in it to null
      * 
-     * @param AuthItemRelationInterface $relation
+     * @param AuthRelationEntityInterface $relation
      */
-    public function removeParentAuthItemRelation(AuthItemRelationInterface $relation);
+    public function removeParentAuthItemRelation(AuthRelationEntityInterface $relation);
 }

@@ -20,9 +20,9 @@ class AuthItem extends \yii\base\Model implements \Amylian\Yii\Doctrine\Rbac\Mod
 {
     use \Amylian\Yii\Doctrine\Rbac\Model\AuthItemEntityTrait;
     
-    protected function newAuthItemRelation(): \Amylian\Yii\Doctrine\Rbac\Model\AuthItemRelationInterface
+    protected function newAuthItemRelation(): \Amylian\Yii\Doctrine\Rbac\Model\AuthRelationEntityInterface
     {
-        return new AuthItemRelation();
+        return new AuthRelation();
     }
 
 }

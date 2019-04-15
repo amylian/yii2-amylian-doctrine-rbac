@@ -14,6 +14,14 @@ namespace Amylian\Yii\Doctrine\Rbac\Model;
  */
 interface AuthAssignmentEntityWithRelationInterface extends AuthAssignmentEntityInterface
 {
-    public function getUser(): \yii\web\IdentityInterface;
-    public function setUser(\yii\web\IdentityInterface $value);
+    /**
+     * Returns the Identity Object representing the user
+     * @return AuthIdentityEntityInterface
+     */
+    public function getUser();
+    /**
+     * Sets the Identity Object representing the user
+     * @param AuthIdentityEntityInterface $value
+     */
+    public function setUser($value);
 }

@@ -14,15 +14,16 @@ namespace Amylian\Tests\Yii\Doctrine\Rbac\Misc;
  * @author Andreas Prucha, Abexto - Helicon Software Development <andreas.prucha@gmail.com>
  * 
  * @Entity
+ * @HasLifecycleCallbacks
  */
 class AuthAssignment extends \yii\base\Model implements \Amylian\Yii\Doctrine\Rbac\Model\AuthAssignmentEntityWithIdInterface
 {
     use \Amylian\Yii\Doctrine\Rbac\Model\AuthAssignmentEntityWithIdTrait;
     
     /**
-     * @var int
+     * @var string
      * @Id
-     * @Column(type="integer", unique=false, nullable=false)
+     * @Column(type="string", length=64, unique=false, nullable=false)
      */
     protected $userId = null;
 }

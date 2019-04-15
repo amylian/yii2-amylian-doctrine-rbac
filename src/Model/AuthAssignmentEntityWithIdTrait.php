@@ -16,13 +16,45 @@ trait AuthAssignmentEntityWithIdTrait
 {
     use AuthAssignmentEntityTrait;
     
+    /**
+     * Sets the user by calling
+     * 
+     * NOTE: This is equivalent to {@see setUserId()}
+     * 
+     * @param mixed $value
+     */
+    public function setUser($userId)
+    {
+        $this->setUserId($userId);
+    }
+    
+    /**
+     * Returns the User ID by calling
+     * 
+     * NOTE: This is equivalent to {@see getUserId()}
+     * 
+     * @return mixed
+     */
+    public function getUser()
+    {
+        return $this->getUserId();
+    }
+    
+    /**
+     * Returns the UserId
+     * @return integer
+     */
     public function getUserId()
     {
         return $this->userId;
     }
     
+    /**
+     * Sets the user ID
+     * @param mixed $id
+     */
     public function setUserId($id)
     {
-        return $this->userId;
+        $this->userId = (string)$id;
     }
 }

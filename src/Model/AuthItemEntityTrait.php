@@ -41,22 +41,34 @@ trait AuthItemEntityTrait
     protected $type;
 
     /**
-     * @var \Doctrine\Common\Collections\ArrayCollection|AuthItemRelationInterface[]
-     * @OneToMany(targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthItemRelationInterface", 
+     * @var \Doctrine\Common\Collections\ArrayCollection|AuthRelationEntityInterface[]
+     * @OneToMany(targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthRelationEntityInterface", 
      *            mappedBy="parent", 
      *            cascade={"all"}, 
+     *            fetch="LAZY",
      *            orphanRemoval=true)
      */
-    protected $childAuthItemRelations;
+    protected $childAuthRelations;
 
     /**
-     * @var \Doctrine\Common\Collections\ArrayCollection|AuthItemRelationInterface[]
-     * @OneToMany(targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthItemRelationInterface", 
+     * @var \Doctrine\Common\Collections\ArrayCollection|AuthRelationEntityInterface[]
+     * @OneToMany(targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthRelationEntityInterface", 
      *            mappedBy="child", 
      *            cascade={"all"}, 
+     *            fetch="LAZY",
      *            orphanRemoval=true)
      */
-    protected $parentAuthItemRelations;
+    protected $parentAuthRelations;
+
+    /**
+     * @var AuthAssignmentEntityInterface[]|\Doctrine\Common\Collections\ArrayCollection 
+     * @OneToMany(targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthAssignmentEntityInterface", 
+     *            mappedBy="authItem", 
+     *            cascade={"all"},
+     *            fetch="EXTRA_LAZY",
+     *            orphanRemoval=true)
+     */
+    protected $authAssignments = null;
 
     /**
      * @var string 
@@ -66,7 +78,7 @@ trait AuthItemEntityTrait
 
     /**
      * @var mixed 
-     * @Column(type="blob", unique=false, nullable=true)
+     * @Column(type="text", unique=false, nullable=true)
      */
     protected $data = null;
 
@@ -83,17 +95,12 @@ trait AuthItemEntityTrait
     protected $updatedAt = null;
 
     /**
-     * @var AuthRuleInterface
-     * @ManyToOne(targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthRuleInterface", cascade={"persist"}, 
-     *           fetch="EAGER")
-     * @JoinColumn(referencedColumnName="name")
+     * @var AuthRuleEntityInterface
+     * @ManyToOne(targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthRuleEntityInterface", cascade={"persist"}, 
+     *           inversedBy="usedByAuthItems", fetch="EAGER")
+     * @JoinColumn(name="rule_name", referencedColumnName="name")
      */
     protected $rule = null;
-
-    /**
-     * @var string Invalid In this context 
-     */
-    private $ruleName = null;
 
     /**
      * @var AuthItemEntityInterface[]|null
@@ -104,6 +111,13 @@ trait AuthItemEntityTrait
      * @var AuthItemEntityInterface[]|null
      */
     private $_parentAuthItems = null;
+
+    /**
+     * Representation as {@see \yii\rbac\Item}
+     * Created by {@see getItem()}. If a property changes it's set to null.
+     * @var \yii\rbac\Item 
+     */
+    protected $_item = null;
 
     /**
      * Handler for Doctrine prePersist and preUpdate events
@@ -117,7 +131,7 @@ trait AuthItemEntityTrait
      * @PrePersist
      * @PreUpdate
      */
-    public function handleOnPersistAndUpdateEvent(\Doctrine\ORM\Event\LifecycleEventArgs $args)
+    public function handlePersistAndUpdateEvent(\Doctrine\ORM\Event\LifecycleEventArgs $args)
     {
         if (!isset($this->createdAt)) {
             $this->createdAt = new \DateTime();
@@ -133,151 +147,265 @@ trait AuthItemEntityTrait
      * The concrete implementation of this entity class MUST use this function to create a
      * new instance of the relation object 
      * 
-     * @return AuthItemRelationInterface
+     * @return AuthRelationEntityInterface
      */
-    abstract protected function newAuthItemRelation(): AuthItemRelationInterface;
+    abstract protected function newAuthItemRelation(): AuthRelationEntityInterface;
 
     /**
-     * Returns the RBAC Item (@see \yii\rbac\Item) reflected by this entity object
-     * @return \yii\rbac\Role|\yii\rbac\Permission|\yii\rbac\Item
+     * {@inheritDoc}
      */
     public function getItem(): \yii\rbac\Item
     {
-        $attribs = ['type' => $this->getType(),
-            'name' => $this->getName(),
-            'description' => $this->getDescription(),
-            'data' => $this->getData(),
-            'ruleName' => $this->getRuleName(),
-            'createdAt' => $this->getCreatedAt()->getTimestamp(),
-            'updatedAt' => $this->getUpdatedAt()->getTimestamp()];
-        switch ($this->getType()) {
-            case static::TYPE_PERMISSION: {
-                    return new \yii\rbac\Permission($attribs); // ===> RETURN
-                }
-            case static::TYPE_ROLE: {
-                    return new \yii\rbac\Role($attribs); // ===> RETURN
-                }
-            default: {
-                    return new \yii\rbac\Item($attribs); // ===> RETURN
-                }
+        if (!$this->_item) {
+            $attribs = ['type' => $this->getType(),
+                'name' => $this->getName(),
+                'description' => $this->getDescription(),
+                'data' => $this->getData(),
+                'ruleName' => $this->getRuleName(),
+                'createdAt' => $this->getCreatedAt()->getTimestamp(),
+                'updatedAt' => $this->getUpdatedAt()->getTimestamp()];
+            switch ($this->getType()) {
+                case static::TYPE_PERMISSION: {
+                        $this->_item = new \yii\rbac\Permission($attribs); // ===> RETURN
+                        break;
+                    }
+                case static::TYPE_ROLE: {
+                        $this->_item = new \yii\rbac\Role($attribs); // ===> RETURN
+                        break;
+                    }
+                default: {
+                        $this->_item = new \yii\rbac\Item($attribs); // ===> RETURN
+                        break;
+                    }
+            }
         }
+        return $this->_item;
     }
+    
+    /**
+    {@inheritDoc}
+    */
+    public function setItem(\yii\rbac\Item $item, ?AuthRuleEntityInterface $authRuleEntity = null)
+    {
+        if ($item->ruleName) {
+            if (!isset($authRuleEntity)) {
+            throw new InvalidArgumentException("parameter \$item has rule name set to '$item->ruleName', but parameter \$authRuleEntity is null");
+            } else {
+                if ($item->ruleName !== $authRuleEntity->getName()) {
+                    throw new InvalidArgumentException("parameter \$item has rule name set to '$item->ruleName', but entity passed in \$authRuleEntity has the name '".$authRuleEntity->getName()."'");
+                }
+            }
+        }
+        $this->setName($item->name);
+        $this->setType($item->type);
+        $this->setDescription($item->description);
+        $this->setData($item->data);
+        $this->setCreatedAt($item->createdAt);
+        $this->setUpdatedAt($item->updatedAt);
+        $this->setRule($authRuleEntity);
+    }
+    
 
+    /**
+     * {@inheritDoc}
+     */
     public function getChildAuthItemRelations()
     {
-        if (!isset($this->childAuthItemRelations)) {
-            $this->childAuthItemRelations = new \Doctrine\Common\Collections\ArrayCollection();
+        if (!isset($this->childAuthRelations)) {
+            $this->childAuthRelations = new \Doctrine\Common\Collections\ArrayCollection();
         }
-        return $this->childAuthItemRelations;
+        return $this->childAuthRelations;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getChildAuthItems()
     {
         if ($this->_childAuthItems === null) {
             $this->_childAuthItems = [];
             foreach ($this->getChildAuthItemRelations() as $rel) {
-                $this->_childAuthItems[] = $rel->getChild();
+                $this->_childAuthItems[$rel->getChild()->getName()] = $rel->getChild();
             }
         }
         return $this->_childAuthItems;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getCreatedAt()
     {
         return $this->createdAt;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getData()
     {
-        return isset($this->data) ? unserialize($this->data) : null;
+        return isset($this->data) ? unserialize((string) $this->data) : null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getDescription()
     {
         return $this->description;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getName()
     {
         return $this->name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getParentAuthItemRelations()
     {
-        if (!isset($this->parentAuthItemRelations)) {
-            $this->parentAuthItemRelations = new \Doctrine\Common\Collections\ArrayCollection();
+        if (!isset($this->parentAuthRelations)) {
+            $this->parentAuthRelations = new \Doctrine\Common\Collections\ArrayCollection();
         }
-        return $this->parentAuthItemRelations;
+        return $this->parentAuthRelations;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getParentAuthItems()
     {
         if ($this->_parentAuthItems === null) {
             $this->_parentAuthItems = [];
             foreach ($this->getParentAuthItemRelations() as $rel) {
-                $this->_parentAuthItems[] = $rel->getParent();
+                $this->_parentAuthItems[$rel->getParent()->getName()] = $rel->getParent();
             }
         }
         return $this->_parentAuthItems;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getRuleName()
     {
-        return $this->getRule() ? $this->getRule->getName() : null;
+        return isset($this->rule) ? $this->rule->getName() : null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getType()
     {
         return $this->type;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getUpdatedAt()
     {
         return $this->updatedAt;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function setCreatedAt($value)
     {
-        $this->createdAt = $value instanceof \DateTime ? $value : new \DateTime($value);
+        if ($value instanceof \DateTime) {
+            $this->createdAt = $value;
+        } else {
+            $value = $value ?? 'now';
+            $this->createdAt = new \DateTime(is_numeric($value) ? '@' . $value : $value);
+        }
+        $this->_item = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function setData($value)
     {
         $this->data = isset($value) ? serialize($value) : null;
+        $this->_item = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function setDescription($value)
     {
         $this->description = $value;
+        $this->_item = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function setName($value)
     {
         $this->name = $value;
+        $this->_item = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function setType($value)
     {
         $this->type = $value;
+        $this->_item = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function setUpdatedAt($value)
     {
-        $this->updatedAt = $value instanceof \DateTime ? $value : new \DateTime($value);
+        if ($value instanceof \DateTime) {
+            $this->updatedAt = $value;
+        } else {
+            $value = $value ?? 'now';
+            $this->updatedAt = new \DateTime(is_numeric($value) ? '@' . $value : $value);
+        }
+        $this->_item = null;
     }
 
-    public function getRule(): ?AuthRuleInterface
+    /**
+     * {@inheritDoc}
+     */
+    public function getRule(): ?AuthRuleEntityInterface
     {
         return $this->rule;
     }
 
-    public function setRule(?AuthRuleInterface $value)
+    /**
+     * {@inheritDoc}
+     */
+    public function setRule(?AuthRuleEntityInterface $value)
     {
         if ($value !== $this->rule) {
+            if (isset($this->rule) && $value === null) {
+                $this->rule->getUsedByAuthItems()->removeElement($this);
+            }
             $this->rule = $value;
+            if ($this->rule) {
+                if (!$this->rule->getUsedByAuthItems()->contains($this)) {
+                    $this->rule->getUsedByAuthItems()->add($this);
+                }
+            }
         }
+        $this->_item = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function addChildAuthItem(AuthItemEntityInterface $child)
     {
         $this->_childAuthItems = null;
@@ -285,8 +413,12 @@ trait AuthItemEntityTrait
         $rel->setParent($this);
         $rel->setChild($child);
         $this->addChildAuthItemRelation($rel);
+        return $rel;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function addParentAuthItem(AuthItemEntityInterface $parent)
     {
         $this->_parentAuthItems = null;
@@ -294,8 +426,12 @@ trait AuthItemEntityTrait
         $rel->setParent($parent);
         $rel->setChild($this);
         $this->addParentAuthItemRelation($rel);
+        return $rel;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function removeChildAuthItem(AuthItemEntityInterface $child)
     {
         $foundRel = null;
@@ -306,16 +442,33 @@ trait AuthItemEntityTrait
             }
         }
         if ($foundRel) {
-            $this->childAuthItemRelations->removeElement($foundRel);
+            $this->childAuthRelations->removeElement($foundRel);
+            $foundRel->setParent(null);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function removeParentAuthItem(AuthItemEntityInterface $parent)
     {
-        
+        $foundRel = null;
+        foreach ($this->getParentAuthItemRelations() as $rel) {
+            if ($rel->getParent() === $parent) {
+                $foundRel = $rel;
+                break; // found ===> break foreach
+            }
+        }
+        if ($foundRel) {
+            $this->parentAuthRelations->removeElement($foundRel);
+            $foundRel->setChild(null);
+        }
     }
 
-    public function addChildAuthItemRelation(AuthItemRelationInterface $relation)
+    /**
+     * {@inheritDoc}
+     */
+    public function addChildAuthItemRelation(AuthRelationEntityInterface $relation)
     {
         if (!$this->getChildAuthItemRelations()->contains($relation)) {
             $this->getChildAuthItemRelations()->add($relation);
@@ -323,7 +476,10 @@ trait AuthItemEntityTrait
         $this->_childAuthItems = null;
     }
 
-    public function addParentAuthItemRelation(AuthItemRelationInterface $relation)
+    /**
+     * {@inheritDoc}
+     */
+    public function addParentAuthItemRelation(AuthRelationEntityInterface $relation)
     {
         if (!$this->getParentAuthItemRelations()->contains($relation)) {
             $this->getParentAuthItemRelations()->add($relation);
@@ -331,22 +487,39 @@ trait AuthItemEntityTrait
         $this->_parentAuthItems = null;
     }
 
-    public function removeChildAuthItemRelation(AuthItemRelationInterface $relation)
+    /**
+     * {@inheritDoc}
+     */
+    public function removeChildAuthItemRelation(AuthRelationEntityInterface $relation)
     {
-        $this->childAuthItemRelations->removeElement($relation);
+        $this->childAuthRelations->removeElement($relation);
         if ($relation->getParent()) {
             $relation->setParent(null);
             $relation->setChild(null);
         }
     }
 
-    public function removeParentAuthItemRelation(AuthItemRelationInterface $relation)
+    /**
+     * {@inheritDoc}
+     */
+    public function removeParentAuthItemRelation(AuthRelationEntityInterface $relation)
     {
-        $this->childAuthItemRelations->removeElement($relation);
+        $this->childAuthRelations->removeElement($relation);
         if ($relation->getChild()) {
             $relation->setParent(null);
             $relation->setChild(null);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAuthAssignments()
+    {
+        if (!$this->authAssignments) {
+            $this->authAssignments = new \Doctrine\Common\Collections\ArrayCollection();
+        }
+        return $this->authAssignments;
     }
 
 }
