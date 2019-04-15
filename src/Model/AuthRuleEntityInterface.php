@@ -3,6 +3,7 @@
 use Amylian\Yii\Doctrine\Rbac\Model\AuthItemEntityInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use yii\rbac\Rule;
+use DateTime
 
 /*
  * To change this license header, choose License Headers in Project Properties.
