@@ -8,6 +8,13 @@
 
 namespace Amylian\Yii\Doctrine\Rbac\Model;
 
+use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping\OneToMany;
+use yii\di\Instance;
+use yii\grid\Column;
+use yii\rbac\Rule;
+
 /**
  * Standard Implementation for AuthRuleInterface
  *
@@ -25,12 +32,12 @@ trait AuthRuleEntityTrait
     protected $name;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      */
     protected $createdAt;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      */
     protected $updatedAt;
 
@@ -41,8 +48,8 @@ trait AuthRuleEntityTrait
     protected $data;
     
     /**
-     * @var AuthItemEntityInterface[]|\Doctrine\Common\Collections\ArrayCollection
-     * @OneToMany (targetEntity="Amylian\Yii\Doctrine\Rbac\Model\AuthItemEntityInterface", mappedBy="rule", fetch="EXTRA_LAZY")
+     * @var AuthItemEntityInterface[]|ArrayCollection
+     * @OneToMany (targetEntity="AuthItemEntityInterface", mappedBy="rule", fetch="EXTRA_LAZY")
      */
     protected $usedByAuthItems = null;
 
@@ -54,7 +61,7 @@ trait AuthRuleEntityTrait
     /**
      * {@inheritDoc}
      */
-    public function getCreatedAt():?\DateTime
+    public function getCreatedAt():?DateTime
     {
         return $this->createdAt;
     }
@@ -70,7 +77,7 @@ trait AuthRuleEntityTrait
     /**
      * {@inheritDoc}
      */
-    public function getUpdatedAt(): ?\DateTime
+    public function getUpdatedAt(): ?DateTime
     {
         return $this->updatedAt;
     }
@@ -78,10 +85,10 @@ trait AuthRuleEntityTrait
     /**
      * {@inheritDoc}
      */
-    public function setCreatedAt(?\DateTime $value)
+    public function setCreatedAt($value)
     {
         if (isset($value)) {
-            $this->createdAt = $value instanceof \DateTime ? $value : new \DateTime(is_numeric($value) ? '@'.$value : $value);
+            $this->createdAt = $value instanceof DateTime ? $value : new DateTime(is_numeric($value) ? '@'.$value : $value);
         } else {
             $this->createdAt = null;
         }
@@ -90,10 +97,10 @@ trait AuthRuleEntityTrait
     /**
      * {@inheritDoc}
      */
-    public function getRule(): \yii\rbac\Rule
+    public function getRule(): Rule
     {
         $result = unserialize((string)$this->data);
-        $result = \yii\di\Instance::ensure($result, \yii\rbac\Rule::class);
+        $result = Instance::ensure($result, Rule::class);
         $result->name = $this->getName();
         $result->createdAt = $result->createdAt ?? (!empty($this->getCreatedAt())) ? $this->getCreatedAt()->getTimestamp() : null;
         $result->updatedAt = $result->updatedAt ?? (!empty($this->getUpdatedAt())) ? $this->getUpdatedAt()->getTimestamp() : null;
@@ -103,7 +110,7 @@ trait AuthRuleEntityTrait
     /**
      * {@inheritDoc}
      */
-    public function setRule(\yii\rbac\Rule $rule)
+    public function setRule(Rule $rule)
     {
         $this->data = serialize($rule);
         $this->setName($rule->name);
@@ -125,7 +132,7 @@ trait AuthRuleEntityTrait
     public function setUpdatedAt($value)
     {
         if (isset($value)) {
-            $this->updatedAt = $value instanceof \DateTime ? $value : new \DateTime(is_numeric($value) ? '@'.$value : $value);
+            $this->updatedAt = $value instanceof DateTime ? $value : new DateTime(is_numeric($value) ? '@'.$value : $value);
         } else {
             $this->updatedAt = null;
         }
@@ -133,12 +140,12 @@ trait AuthRuleEntityTrait
     
     /**
      * Returns all AuthItems using this rule
-     * @return AuthItemEntityInterface[]|\Doctrine\Common\Collections\ArrayCollection
+     * @return AuthItemEntityInterface[]|ArrayCollection
      */
     public function getUsedByAuthItems()
     {
         if (!isset($this->usedByAuthItems)) {
-            $this->usedByAuthItems = new \Doctrine\Common\Collections\ArrayCollection();
+            $this->usedByAuthItems = new ArrayCollection();
         }
         return $this->usedByAuthItems;
     }

@@ -1,5 +1,9 @@
 <?php
 
+use Amylian\Yii\Doctrine\Rbac\Model\AuthItemEntityInterface;
+use Doctrine\Common\Collections\ArrayCollection;
+use yii\rbac\Rule;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -28,43 +32,43 @@ interface AuthRuleEntityInterface
 
     /**
      * Returns the Creation Date
-     * @return \DateTime
+     * @return DateTime
      */
-    public function getCreatedAt(): ?\DateTime;
+    public function getCreatedAt(): ?DateTime;
 
     /**
      * Returns the Rule Instance
      * Creates the rule instance if necessary and returns it
-     * @return \yii\rbac\Rule
+     * @return Rule
      */
-    public function getRule(): \yii\rbac\Rule;
+    public function getRule(): Rule;
 
     /**
      * Assigns the rule.
      * This function calls {@see setRuleClassName()} using the type of the given rule
-     * @param \yii\rbac\Rule
+     * @param Rule
      */
-    public function setRule(\yii\rbac\Rule $rule);
+    public function setRule(Rule $rule);
 
     /**
      * Sets the creation time
-     * @param type $value
+     * @param int|DateTime $value
      */
-    public function setCreatedAt(?\DateTime $value);
+    public function setCreatedAt($value);
 
     /**
      * Returns the modification time
      */
-    public function getUpdatedAt(): ?\DateTime;
+    public function getUpdatedAt(): ?DateTime;
 
     /**
      * Sets the modification time
-     * @param type $value
+     * @param int|DateTime $value
      */
-    public function setUpdatedAt(?\DateTime $value);
+    public function setUpdatedAt($value);
     /**
      * Returns all AuthItems using this rule
-     * @return AuthItemEntityInterface[]|\Doctrine\Common\Collections\ArrayCollection
+     * @return AuthItemEntityInterface[]|ArrayCollection
      */
     public function getUsedByAuthItems();
 }
